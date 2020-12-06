@@ -1,6 +1,8 @@
 import _ from 'lodash';
-import { Dice } from './rooms';
+import { Dice, GameStateType } from '../common/models/common';
+import { mod } from '../src/utils';
 import Player from './player';
+import { Room, RoomManager } from './rooms';
 
 export enum RuleType {
   Text = 'TEXT',
@@ -17,8 +19,14 @@ export type TargetFunction = (currentPlayer: Player, players: Player[]) => Playe
 export const targetFunction = Object.freeze({
   current: (): TargetFunction => (currentPlayer) => [currentPlayer],
 
-  relative: (offset: number): TargetFunction => (currentPlayer) => [currentPlayer],
+  relative: (offset: number): TargetFunction => (currentPlayer, players) => {
+    const index = players.findIndex((ply) => ply === currentPlayer);
 
+    if (index === -1) return [];
+
+    const target = players[mod(index + offset, players.length)];
+    return [target];
+  },
   player: (): TargetFunction => (currentPlayer, players) => {
     return _.filter(players, (p) => p == currentPlayer);
   },
@@ -49,7 +57,7 @@ class Rule {
     return this.link.matches(dice);
   }
 
-  apply(currentPlayer: Player, players: Player[]) {}
+  execute(manager: RoomManager, room: Room, currentPlayer: Player, players: Player[]) {}
 }
 
 class TextRule extends Rule {
@@ -67,15 +75,15 @@ class AddRule extends Rule {
     this.num = num;
   }
 
-  apply(currentPlayer: Player, players: Player[]) {
+  execute(manager: RoomManager, room: Room, currentPlayer: Player, players: Player[]) {
     if (!this.targetFunc) return;
 
     const filtered = this.targetFunc(currentPlayer, players);
     console.log(filtered);
 
-    // _.each(filtered, (p) => {
-    //   p.addDrinks(this.num);
-    // });
+    _.each(filtered, (p) => {
+      p.addPendingDrinks(this.num);
+    });
   }
 }
 
@@ -88,10 +96,23 @@ class MultRule extends Rule {
 }
 
 class GiveRule extends Rule {
+  public total: number = 0;
+
   constructor(name: string, link: Link, targetFunc: TargetFunction, public nums: number[]) {
     super(name, RuleType.Give, link, targetFunc);
 
     this.nums = nums;
+    this.total = _.sum(nums);
+  }
+
+  execute(manager: RoomManager, room: Room, currentPlayer: Player, players: Player[]) {
+    manager.setGameState(room, {
+      type: GameStateType.Give,
+      amount: this.nums,
+      dice: room.dice,
+      playerId: currentPlayer.id,
+      total: this.total
+    });
   }
 }
 
@@ -192,13 +213,13 @@ const standardRules: Rule[] = [
   new ChallengeRule('Challenge', new DiceLink([1, 2]), targetFunction.player()),
 
   // Snake eyes
-  new AddRule('Snake Eyes', new DiceLink([1, 1]), targetFunction.current(), 2),
+  new GiveRule('Snake Eyes', new DiceLink([1, 1]), targetFunction.player(), [1, 1]),
   // 2 + 2 give out
   new GiveRule('Double Twos', new DiceLink([2, 2]), targetFunction.player(), [2, 2]),
 
   // Dödsman
   new AddRule('Dödsman', new DiceLink([3]), targetFunction.all(), 1),
-  // Double Dödsman
+  // Double Dödsman (this will trigger with normal Dödsman, therefore it only gives 2)
   new AddRule('Double Dödsman', new DiceLink([3, 3]), targetFunction.all(), 2),
 
   // 4 + 4 give out

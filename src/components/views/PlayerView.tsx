@@ -1,11 +1,11 @@
 import { motion } from 'framer-motion';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useSwipeable } from 'react-swipeable';
 import { css } from 'twin.macro';
 import { ClientModels } from '../../models';
 import socket from '../../socket';
 import animations from '../../utils/animations';
-import Popup, { PopupState } from '../Popup';
+import Popup from '../Popup';
 import 'twin.macro';
 import Avatar from '../Avatar';
 import Button from '../Button';
@@ -13,10 +13,16 @@ import Heading from '../Heading';
 import TwoDice from '../TwoDice';
 import Star from '../Star';
 import _ from 'lodash';
-import Player from '../../../server/player';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppState } from '../../store/reducers';
 import { roomClosePopup } from '../../store/actions';
+import {
+  GameStateType,
+  Player,
+  PopupResult,
+  PopupState,
+  PopupType
+} from '../../../common/models/common';
 
 const Players: React.FC<{ players: Player[]; turn: string }> = ({ players, turn }) => {
   return (
@@ -42,12 +48,20 @@ const PlayerView: React.FC<{} & ClientModels.RoomViewProps> = ({ state, dieRef1,
   const [menuOpen, setMenuOpen] = useState(false);
 
   const popup = useSelector<AppState, PopupState>((state) => state.room.popup);
+  const playerId = useSelector<AppState, string>((state) => state.room.playerId);
   const dispatch = useDispatch();
 
   const room = state.room;
+  const gameState = room.data.gameState;
 
   let rollBtn: React.ReactNode;
-  if (room.data.turn == room.playerId) {
+  if (!state.rolling && gameState.type === GameStateType.Give) {
+    rollBtn = (
+      <div tw="h-14 text-white flex justify-center items-center font-bold text-xl">
+        Waiting for player to give out drinks
+      </div>
+    );
+  } else if (room.data.turn == room.playerId) {
     rollBtn = (
       <Button
         tw="w-full h-14"
@@ -77,6 +91,14 @@ const PlayerView: React.FC<{} & ClientModels.RoomViewProps> = ({ state, dieRef1,
       if (eventData.deltaY > 0) setMenuOpen(false);
     }
   });
+
+  const handleGiveDrinks = useCallback((state: PopupState, result: PopupResult) => {
+    if (result.type !== PopupType.Give) return;
+
+    socket.emit('room_give_drinks', {
+      targetIds: result.targetIds
+    });
+  }, []);
 
   const currentPlayer = room.data.players.find((p) => room.data.turn === p.id);
   return (
@@ -177,9 +199,26 @@ const PlayerView: React.FC<{} & ClientModels.RoomViewProps> = ({ state, dieRef1,
         </div>
       </div>
 
-      <div tw="w-full h-full  overflow-hidden">
-        <Popup state={popup} room={room} onDone={() => dispatch(roomClosePopup())} />
-      </div>
+      {!popup && gameState.type === GameStateType.Give && playerId === gameState.playerId && (
+        <Popup
+          delay={2.5}
+          state={{
+            amount: gameState.amount,
+            total: 10,
+            type: PopupType.Give,
+            playerId: gameState.playerId
+          }}
+          room={room}
+          onDone={handleGiveDrinks}
+        />
+      )}
+
+      <Popup
+        delay={popup?.delay ?? 0}
+        state={popup}
+        room={room}
+        onDone={() => dispatch(roomClosePopup())}
+      />
     </div>
   );
 };

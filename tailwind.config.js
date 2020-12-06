@@ -4,14 +4,14 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        dtek: "#fa6607",
-        "dtek-dark": "#d24504",
-        "dtek-darker": "#b93104",
-      },
-    },
+        dtek: '#fa6607',
+        'dtek-dark': '#d24504',
+        'dtek-darker': '#b93104'
+      }
+    }
   },
   variants: {
-    extend: {},
+    extend: {}
   },
-  plugins: [],
+  plugins: []
 };

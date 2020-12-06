@@ -1,9 +1,8 @@
 import { AppSocket } from '.';
+import { CommonModels } from '../common/models';
+import { avatars, AvatarType } from '../common/models/common';
 
-const avatars = ['cocktail', 'whiskey', 'keg', 'wine'] as const;
-export type AvatarType = typeof avatars[number];
-
-class Player {
+class Player implements CommonModels.Player {
   score = 0;
   pendingDrinks = 0;
   active = false;
@@ -27,8 +26,12 @@ class Player {
     this.score += score;
   }
 
-  addDrinks(drinks: number) {
+  addPendingDrinks(drinks: number) {
     this.pendingDrinks += drinks;
+  }
+
+  resetPendingDrinks() {
+    this.pendingDrinks = 0;
   }
 
   setActive(active: boolean) {

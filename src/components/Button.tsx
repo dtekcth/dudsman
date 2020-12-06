@@ -7,14 +7,19 @@ export interface ButtonProps {
   onClick?: () => void;
   outline?: boolean;
   loading?: boolean;
+  disabled?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, React.PropsWithChildren<ButtonProps>>(
-  function Button({ children, className, outline, loading, onClick }, ref) {
+  function Button({ children, className, outline, loading, onClick, disabled }, ref) {
     return (
       <button
         css={[
-          outline ? tw`border-2 border-white rounded-full` : tw`bg-dtek rounded`,
+          disabled
+            ? tw`bg-gray-300`
+            : outline
+            ? tw`border-2 border-white rounded-full`
+            : tw`bg-dtek rounded`,
           loading
             ? css`
                 pointer-events: none;
@@ -32,11 +37,11 @@ const Button = React.forwardRef<HTMLButtonElement, React.PropsWithChildren<Butto
                   position: absolute !important;
                 }
               `
-            : tw`hover:bg-dtek-dark`
+            : !disabled && tw`hover:bg-dtek-dark`
         ]}
         tw="block px-5 py-3 text-white transition duration-200 uppercase tracking-widest font-bold focus:outline-none relative"
-        {...{ ref, className }}
-        onClick={() => !loading && onClick?.()}>
+        {...{ ref, className, disabled }}
+        onClick={() => !disabled && !loading && onClick?.()}>
         {children}
       </button>
     );

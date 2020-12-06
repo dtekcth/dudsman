@@ -1,33 +1,44 @@
-import _, { find } from 'lodash';
-import util from 'util';
+import _ from 'lodash';
 import * as securePin from 'secure-pin';
 import { Server } from 'socket.io';
 import uniqid from 'uniqid';
 import { AppSocket } from '.';
 import Player from './player';
 import { Rule, standardRules } from './rules';
-import { PopupState } from '../src/components/Popup';
+import { CommonModels } from '../common/models';
+import {
+  GameState,
+  GameStateType,
+  PopupState,
+  PopupType,
+  POPUP_STANDARD_DELAY
+} from '../common/models/common';
 
 const securePinGeneratePromise = (length: number) =>
   new Promise<string>((resolve) => {
     securePin.generatePin(length, (pin: string) => resolve(pin));
   });
 
-export type Dice = number[];
-
-export class Room {
+export class Room implements CommonModels.Room {
   players: Player[] = [];
   activePlayers: Player[] = [];
   rules: Rule[] = [...standardRules];
   turn?: string;
-  dice: Dice = [];
+  dice: CommonModels.Dice = [];
   host: AppSocket;
   destroyed: boolean = false;
+  gameState: GameState = {
+    type: GameStateType.Playing
+  };
 
-  private rollTime: Date;
+  rollTime: Date;
 
   constructor(public code: string) {
     this.code = code;
+  }
+
+  setGameState(state: GameState) {
+    this.gameState = state;
   }
 
   addPlayer(name: string, socket: AppSocket) {
@@ -123,12 +134,16 @@ export class Room {
   rollDice(ply: Player) {
     if (this.turn != ply.id) {
       console.log('Tried to roll when not player turn', ply.id);
-      return;
+      return false;
+    }
+
+    if (this.gameState.type !== GameStateType.Playing) {
+      console.log('Tried to roll when game state is not playing', ply.id);
+      return false;
     }
 
     const n1 = Math.floor(Math.random() * 6) + 1;
     const n2 = Math.floor(Math.random() * 6) + 1;
-    // const n1 = 4, n2 = 2;
 
     this.dice = [n1, n2];
     this.rollTime = new Date();
@@ -139,17 +154,12 @@ export class Room {
     if (rules.length == 0) {
       console.log('No rule matched');
       this.nextTurn();
-
-      return;
     }
 
-    const players = this.activePlayers;
-    _.each(rules, (r) => {
-      r.apply(_.first(players), players);
-    });
+    return true;
   }
 
-  matchRules(dice: Dice) {
+  matchRules(dice: CommonModels.Dice) {
     return _.filter(this.rules, (r) => r.matches(dice));
   }
 
@@ -175,7 +185,8 @@ export class Room {
       turn: this.turn,
       dice: this.dice,
       rollTime: this.rollTime,
-      players: _.map(this.activePlayers, (p) => p.serialize())
+      players: _.map(this.activePlayers, (p) => p.serialize()),
+      gameState: this.gameState
     };
   }
 }
@@ -213,7 +224,22 @@ export class RoomManager {
     return true;
   }
 
+  setGameState(room: Room, state: GameState) {
+    if (!room || room.destroyed) {
+      console.error('Attempted to set game state in invalid room');
+      return;
+    }
+
+    room.setGameState(state);
+    this.syncRoom(room);
+  }
+
   syncRoom(room: Room) {
+    if (!room) {
+      console.error('Attempted to sync invalid room');
+      return;
+    }
+
     if (room.destroyed) {
       this.io.to('room_' + room.code).emit('room_info', {
         error: 'destroyed'
@@ -287,6 +313,61 @@ export class RoomManager {
     }
 
     room.setTurn(id);
+    this.syncRoom(room);
+  }
+
+  giveDrinks(socket: AppSocket, targetIds: string[]) {
+    const { room } = socket;
+
+    if (!this.verifySocket(socket)) {
+      this.sendInvalidSession(socket);
+      return;
+    }
+
+    if (room.gameState.type !== GameStateType.Give) {
+      console.error('Attempted to give drinks when game state is wrong');
+      return;
+    }
+
+    if (room.gameState.playerId !== socket.player.id) {
+      console.error('Wrong player attempted to give out drinks');
+      return;
+    }
+
+    if (targetIds.length !== room.gameState.amount.length) {
+      console.error('Player tried to give out too few drinks');
+      return;
+    }
+
+    const targets = targetIds.map((id) => room.getPlayerFromId(id));
+    if (targets.length !== targetIds.length) {
+      console.error('Attempted to give drinks to non existant player', targetIds);
+      return;
+    }
+
+    const gameState = room.gameState;
+
+    const totalDrinks = {};
+    targets.forEach((ply, i) => {
+      totalDrinks[ply.id] ??= 0;
+      totalDrinks[ply.id] += gameState.amount[i] ?? 0;
+    });
+
+    targets.forEach((ply) => {
+      if (totalDrinks[ply.id] === 0) return;
+
+      ply.addScore(totalDrinks[ply.id]);
+      this.sendPopup(ply.socket, {
+        type: PopupType.Drink,
+        drinks: totalDrinks[ply.id],
+        dice: room.dice
+      });
+    });
+
+    this.setGameState(room, {
+      type: GameStateType.Playing
+    });
+
     this.syncRoom(room);
   }
 
@@ -409,18 +490,23 @@ export class RoomManager {
       return;
     }
 
-    room.rollDice(player);
+    const didRoll = room.rollDice(player);
+    if (!didRoll) return;
 
-    room.players.forEach((ply) => {
-      if (ply === player) return;
+    const players = room.activePlayers;
 
-      const drinks = Math.floor(Math.random() * 10);
-      ply.addScore(drinks);
-      this.sendPopup(ply.socket, {
-        type: 'drink',
-        drinks,
-        dice: room.dice
-      });
+    const rules = room.matchRules(room.dice);
+    _.each(rules, (r) => {
+      console.log('executing rule', r.name);
+
+      r.execute(this, room, player, players);
+    });
+
+    _.each(players, (ply) => {
+      if (ply.pendingDrinks === 0) return;
+
+      this.sendDrinks(room, ply, ply.pendingDrinks);
+      ply.resetPendingDrinks();
     });
 
     this.syncRoom(room);
@@ -435,5 +521,22 @@ export class RoomManager {
     console.log('Sending popup to ', socket.id, popup);
 
     socket.emit('room_popup', popup);
+  }
+
+  sendDrinks(room: Room, ply: Player, amount: number) {
+    if (!ply) return;
+
+    if (!this.verifySocket(ply.socket)) {
+      this.sendInvalidSession(ply.socket);
+      return;
+    }
+
+    ply.addScore(amount);
+    this.sendPopup(ply.socket, {
+      type: PopupType.Drink,
+      drinks: amount,
+      dice: room.dice,
+      delay: POPUP_STANDARD_DELAY
+    });
   }
 }

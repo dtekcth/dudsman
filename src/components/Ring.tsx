@@ -1,6 +1,7 @@
 import React from 'react';
+import 'twin.macro';
 
-const Circular: React.FC<{ radius?: number }> = ({ children, radius = 40 }) => (
+const Ring: React.FC<{ radius?: number }> = ({ children, radius = 40 }) => (
   <>
     {React.Children.map(children, (c, i) => {
       const a = (i / React.Children.count(children)) * Math.PI * 2 - Math.PI / 2;
@@ -23,4 +24,4 @@ const Circular: React.FC<{ radius?: number }> = ({ children, radius = 40 }) => (
   </>
 );
 
-export default Circular;
+export default Ring;

@@ -4,6 +4,7 @@ import { AnimatePresence, createDomMotionComponent, motion } from 'framer-motion
 import { css } from 'twin.macro';
 
 export interface DieProps {
+  className?: string;
   size?: number | string;
   number: number;
   delay?: number;
@@ -18,7 +19,10 @@ export interface DieElement {
 }
 
 const Die = React.forwardRef<DieElement, React.PropsWithChildren<DieProps>>(
-  ({ size, number, delay, right, color = 'white', animated = true, rollTime }, forwardRef) => {
+  (
+    { className, size, number, delay, right, color = 'white', animated = true, rollTime },
+    forwardRef
+  ) => {
     const mult = right ? 1 : -1;
     const [rolling, setRolling] = useState(false);
 
@@ -45,6 +49,7 @@ const Die = React.forwardRef<DieElement, React.PropsWithChildren<DieProps>>(
     if (!animated) {
       return (
         <motion.svg
+          {...{ className }}
           key={key}
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
@@ -77,6 +82,7 @@ const Die = React.forwardRef<DieElement, React.PropsWithChildren<DieProps>>(
       <AnimatePresence exitBeforeEnter onExitComplete={() => setRolling(false)}>
         {!rolling && (
           <motion.svg
+            {...{ className }}
             key={key}
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"

@@ -1,10 +1,8 @@
 import _ from 'lodash';
 import { useRouter } from 'next/router';
 import React, { useEffect, useRef, useState } from 'react';
-import { useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import 'twin.macro';
-import Player from '../../../server/player';
 import { DieElement } from '../../components/Die';
 import Heading from '../../components/Heading';
 import Loader from '../../components/Loader';
@@ -15,6 +13,7 @@ import { useTimeout } from '../../utils';
 import { ClientModels } from '../../models';
 import HostView from '../../components/views/HostView';
 import PlayerView from '../../components/views/PlayerView';
+import { Player } from '../../../common/models/common';
 
 const RoomPage = () => {
   const router = useRouter();

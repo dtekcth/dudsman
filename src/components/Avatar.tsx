@@ -1,17 +1,19 @@
 import { css } from '@emotion/react';
 import React, { useEffect } from 'react';
-import { AvatarType } from '../../server/player';
 import 'twin.macro';
 import animations from '../utils/animations';
 import { motion } from 'framer-motion';
 import { useTimeout } from '../utils';
+import { AvatarType } from '../../common/models/common';
+import { useDebounce } from '../utils/hooks';
 
 export interface AvatarProps {
-  name: string;
+  name?: string;
   className?: string;
   type: AvatarType;
   size?: number;
   score?: number;
+  animated?: boolean;
   onKick?: () => void;
   onGiveTurn?: () => void;
 }
@@ -52,35 +54,11 @@ const Avatar: React.FC<AvatarProps> = ({
   size = 80,
   score,
   name,
+  animated = true,
   onKick,
   onGiveTurn
 }) => {
-  // componentDidUpdate(prevProps) {
-  //   if (this.bubble && prevProps.score !== this.props.score) {
-  //     const timeline = anime.timeline();
-
-  //     timeline
-  //       .add({
-  //         targets: this.bubble,
-  //         scale: {
-  //           value: 1.5,
-  //           duration: 1000,
-  //           elasticity: 800
-  //         }
-  //       })
-  //       .add({
-  //         targets: this.bubble,
-  //         scale: {
-  //           value: 1,
-  //           duration: 1000,
-  //           offset: "-=500",
-  //           elasticity: 800
-  //         }
-  //       });
-
-  //     timeline.play();
-  //   }
-  // }
+  const scoreDebounced = useDebounce(score, 2500);
 
   const [bubble, setBubble] = React.useState(false);
   const timeout = useTimeout();
@@ -92,12 +70,14 @@ const Avatar: React.FC<AvatarProps> = ({
     }, 200);
 
     return () => clearTimeout(timer);
-  }, [score]);
+  }, [scoreDebounced]);
 
   let avatarElem: React.ReactNode;
-  const svgStyle = css`
-    animation: ${animations.bounce} 1.5s infinite;
-  `;
+  const svgStyle =
+    animated &&
+    css`
+      animation: ${animations.bounce} 1.5s infinite;
+    `;
 
   switch (type) {
     case 'cocktail':
@@ -334,8 +314,8 @@ const Avatar: React.FC<AvatarProps> = ({
   return (
     <div
       css={css`
-        width: 100px;
-        height: 100px;
+        width: ${size}px;
+        height: ${size}px;
       `}
       {...{ className }}
       tw={'relative inline-block flex flex-col items-center'}>
@@ -388,7 +368,7 @@ const Avatar: React.FC<AvatarProps> = ({
         )}
       </div>
 
-      {score ? (
+      {scoreDebounced ? (
         <motion.div
           initial={{
             scale: 0
@@ -409,7 +389,7 @@ const Avatar: React.FC<AvatarProps> = ({
             }
           }}
           tw="rounded-full w-6 h-6 mr-1 absolute top-0 right-0 flex justify-center items-center bg-black bg-opacity-50">
-          <span tw="text-white font-bold">{score}</span>
+          <span tw="text-white font-bold">{scoreDebounced}</span>
         </motion.div>
       ) : null}
     </div>

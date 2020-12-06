@@ -1,4 +1,4 @@
-import { PopupState } from '../../components/Popup';
+import { PopupState } from '../../../common/models/common';
 import { ClientRoom } from '../reducers/room';
 
 export const roomUpdate = (err: Error, room: ClientRoom, joined: boolean, ready: boolean) => {

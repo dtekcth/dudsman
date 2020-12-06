@@ -72,6 +72,11 @@ io.on('connection', (socket: AppSocket) => {
   socket.on('room_give_turn', ({ id }) => {
     roomManager.giveTurn(socket, id);
   });
+
+  socket.on('room_give_drinks', ({ targetIds }) => {
+    console.log(targetIds);
+    roomManager.giveDrinks(socket, targetIds);
+  });
 });
 
 (async () => {

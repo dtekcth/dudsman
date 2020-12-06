@@ -1,6 +1,6 @@
 import { Reducer } from 'redux';
+import { Dice, GameState } from '../../../common/models/common';
 import Player from '../../../server/player';
-import { Dice, Room } from '../../../server/rooms';
 import { PopupState } from '../../components/Popup';
 
 export type ClientRoom = {
@@ -9,6 +9,7 @@ export type ClientRoom = {
   code: string;
   players: Player[];
   turn?: string;
+  gameState: GameState;
 };
 
 export interface RoomState {
@@ -29,8 +30,6 @@ const roomReducer: Reducer<RoomState> = (
   },
   action
 ) => {
-  console.log(action);
-
   switch (action.type) {
     case 'ROOM_UPDATE':
       return {

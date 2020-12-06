@@ -1,14 +1,15 @@
 import _ from 'lodash';
 import React from 'react';
 import { css } from 'twin.macro';
-import Player from '../../../server/player';
 import { ClientModels } from '../../models';
 import animations from '../../utils/animations';
 import Avatar from '../Avatar';
-import Circular from '../Circular';
+import Ring from '../Ring';
 import Heading from '../Heading';
 import TwoDice from '../TwoDice';
 import 'twin.macro';
+import Star from '../Star';
+import { Player } from '../../../common/models/common';
 
 const HostView: React.FC<
   {
@@ -95,7 +96,7 @@ const HostView: React.FC<
       <div
         tw="absolute left-1/2 top-1/2"
         css={{ width: 500, height: 500, transform: 'translate(-50%, calc(-50% + 30px))' }}>
-        <Circular>{players}</Circular>
+        <Ring>{players}</Ring>
       </div>
     </div>
   );
