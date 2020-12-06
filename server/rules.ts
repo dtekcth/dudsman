@@ -120,6 +120,10 @@ class ClickRule extends Rule {
   constructor(name: string, link: Link) {
     super(name, RuleType.Click, link, targetFunction.all());
   }
+
+  execute(manager: RoomManager, room: Room, currentPlayer: Player, players: Player[]) {
+    manager.startClickGameState(room);
+  }
 }
 
 class ChallengeRule extends Rule {

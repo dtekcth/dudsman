@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import _, { forEach } from 'lodash';
 import * as securePin from 'secure-pin';
 import { Server } from 'socket.io';
 import uniqid from 'uniqid';
@@ -19,6 +19,9 @@ const securePinGeneratePromise = (length: number) =>
     securePin.generatePin(length, (pin: string) => resolve(pin));
   });
 
+export enum RoomTimer {
+  Click = 'CLICK'
+}
 export class Room implements CommonModels.Room {
   players: Player[] = [];
   activePlayers: Player[] = [];
@@ -32,6 +35,11 @@ export class Room implements CommonModels.Room {
   };
 
   rollTime: Date;
+
+  timers: {
+    type: RoomTimer;
+    timer: NodeJS.Timer;
+  }[] = [];
 
   constructor(public code: string) {
     this.code = code;
@@ -173,6 +181,29 @@ export class Room implements CommonModels.Room {
 
   getPlayerFromId(id: string) {
     return this.players.find((p) => p.id === id);
+  }
+
+  addTimer(type: RoomTimer, cb: () => void, timeout: number) {
+    const timer = setTimeout(() => {
+      _.remove(this.timers, (t) => t.timer === timer);
+      cb();
+    }, timeout);
+
+    this.timers.push({
+      timer,
+      type
+    });
+  }
+
+  removeTimers(type: RoomTimer) {
+    this.timers = this.timers.filter((t) => {
+      if (t.type === type) {
+        clearTimeout(t.timer);
+        return false;
+      }
+
+      return true;
+    });
   }
 
   destroy() {
@@ -373,6 +404,44 @@ export class RoomManager {
     this.syncRoom(room);
   }
 
+  startClickGameState(room: Room) {
+    if (!room) {
+      console.error('Tried to start click game without room');
+      return;
+    }
+
+    const { players } = room;
+
+    players.forEach((ply) => {
+      ply.clickCount = 0;
+    });
+
+    const count = 5;
+    this.setGameState(room, {
+      type: GameStateType.Click,
+      count
+    });
+
+    room.addTimer(
+      RoomTimer.Click,
+      () => {
+        this.setGameState(room, {
+          type: GameStateType.Playing
+        });
+
+        const targets: Player[] = [];
+        room.players.forEach((ply) => {
+          if (ply.clickCount < count) {
+            targets.push(ply);
+          }
+        });
+
+        this.onClickGameFinished(room, targets);
+      },
+      10000
+    );
+  }
+
   onClientLeave(socket: AppSocket) {
     const { room, player } = socket;
 
@@ -410,6 +479,73 @@ export class RoomManager {
 
     room.activatePlayer(ply, socket);
     this.syncRoom(room);
+  }
+
+  onClickDot(socket: AppSocket) {
+    const { player, room } = socket;
+
+    if (!this.verifySocket(socket)) {
+      this.sendInvalidSession(socket);
+      return;
+    }
+
+    const gameState = room.gameState;
+    if (gameState.type !== GameStateType.Click) {
+      console.error('Attempted to click dot when game state is wrong');
+      return;
+    }
+
+    if (player.clickCount == gameState.count) return;
+
+    player.clickCount++;
+
+    let countDone = 0;
+    _.forEach(room.players, (ply) => {
+      if (ply.clickCount >= gameState.count) {
+        countDone++;
+      }
+    });
+
+    if (countDone === room.players.length - 1) {
+      const target = room.players.find((ply) => ply.clickCount < gameState.count);
+
+      this.onClickGameFinished(room, [target]);
+    }
+  }
+
+  onClickGameFinished(room: Room, targets: Player[]) {
+    if (!room) {
+      console.error('Click game finished in invalid room');
+      return;
+    }
+
+    const names = targets.map((p) => p.name).join(', ');
+    room.players.forEach((ply) => {
+      const found = targets.find((p) => ply.id === p.id);
+
+      if (found) {
+        ply.addScore(1);
+        this.sendPopup(ply.socket, {
+          type: PopupType.GameLost,
+          drinks: 1,
+          dice: room.dice,
+          message: 'Too slow!'
+        });
+      } else {
+        this.sendPopup(ply.socket, {
+          type: PopupType.ClickGameFinished,
+          message: `You survived! ${names} ${
+            targets.length > 1 ? 'were' : 'was'
+          } too slow though...`
+        });
+      }
+    });
+
+    this.setGameState(room, {
+      type: GameStateType.Playing
+    });
+
+    room.removeTimers(RoomTimer.Click);
   }
 
   ensurePlayerActive(socket: AppSocket) {

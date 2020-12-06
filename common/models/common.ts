@@ -6,7 +6,8 @@ export type Dice = number[];
 export enum PopupType {
   GameLost = 'GAME_LOST',
   Drink = 'DRINK',
-  Give = 'GIVE'
+  Give = 'GIVE',
+  ClickGameFinished = 'CLICK_GAME_FINISHED'
 }
 
 export const avatars = ['cocktail', 'whiskey', 'keg', 'wine'] as const;
@@ -23,7 +24,8 @@ export interface Player {
 
 export enum GameStateType {
   Playing = 'IDLE',
-  Give = 'GIVE'
+  Give = 'GIVE',
+  Click = 'Click'
 }
 
 export type GameState =
@@ -36,6 +38,10 @@ export type GameState =
       amount: number[];
       dice: CommonModels.Dice;
       total: number;
+    }
+  | {
+      type: GameStateType.Click;
+      count: number;
     };
 
 export interface Room {
@@ -69,6 +75,11 @@ export type PopupState =
       amount: number[];
       total: number;
       playerId: string;
+    }
+  | {
+      type: PopupType.ClickGameFinished;
+      delay?: number;
+      message: string;
     };
 
 export type PopupResult =

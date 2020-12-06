@@ -23,6 +23,7 @@ import {
   PopupState,
   PopupType
 } from '../../../common/models/common';
+import ClickArea from '../ClickArea';
 
 const Players: React.FC<{ players: Player[]; turn: string }> = ({ players, turn }) => {
   return (
@@ -100,12 +101,19 @@ const PlayerView: React.FC<{} & ClientModels.RoomViewProps> = ({ state, dieRef1,
     });
   }, []);
 
+  const handleClickDot = useCallback(() => {
+    socket.emit('room_click_dot');
+  }, []);
+
   const currentPlayer = room.data.players.find((p) => room.data.turn === p.id);
   return (
     <div tw="max-w-sm w-full mx-auto h-full relative border-b-4 border-blue-500">
       <motion.div
         tw="relative h-full"
-        animate={{ y: menuOpen ? -50 : 0 }}
+        animate={{
+          y: menuOpen ? -50 : 0,
+          opacity: gameState.type === GameStateType.Click ? 0.2 : 1
+        }}
         transition={{ duration: 0.2 }}>
         <div tw="absolute inset-x-0 top-1/2 transform -translate-y-1/2 w-full">
           <div tw="px-2 mt-4">
@@ -198,6 +206,12 @@ const PlayerView: React.FC<{} & ClientModels.RoomViewProps> = ({ state, dieRef1,
           </motion.div>
         </div>
       </div>
+
+      {gameState.type === GameStateType.Click && (
+        <div tw="absolute inset-x-8" css={{ bottom: '15%', top: '10%' }}>
+          <ClickArea onClick={handleClickDot} count={gameState.count} />
+        </div>
+      )}
 
       {!popup && gameState.type === GameStateType.Give && playerId === gameState.playerId && (
         <Popup

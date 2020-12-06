@@ -77,6 +77,10 @@ io.on('connection', (socket: AppSocket) => {
     console.log(targetIds);
     roomManager.giveDrinks(socket, targetIds);
   });
+
+  socket.on('room_click_dot', () => {
+    roomManager.onClickDot(socket);
+  });
 });
 
 (async () => {

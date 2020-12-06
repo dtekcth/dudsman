@@ -6,6 +6,7 @@ class Player implements CommonModels.Player {
   score = 0;
   pendingDrinks = 0;
   active = false;
+  clickCount = 0;
 
   public avatar: AvatarType;
   public socket: AppSocket;
