@@ -78,7 +78,6 @@ const HomePage = () => {
             ref={register({
               required: true
             })}
-            defaultValue="Najs"
           />
 
           <InputMask
@@ -90,7 +89,6 @@ const HomePage = () => {
             mask="9999"
             maskChar={null}
             placeholder="Room code"
-            defaultValue="0000"
           />
 
           <Button tw="w-full" loading={entering}>
