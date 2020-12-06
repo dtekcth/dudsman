@@ -410,11 +410,10 @@ export class RoomManager {
       return;
     }
 
-    const { players } = room;
+    const players = room.activePlayers;
+    if (players.length === 0) return;
 
-    players.forEach((ply) => {
-      ply.clickCount = 0;
-    });
+    players.forEach((ply) => (ply.clickCount = 0));
 
     const count = 5;
     this.setGameState(room, {
@@ -430,7 +429,7 @@ export class RoomManager {
         });
 
         const targets: Player[] = [];
-        room.players.forEach((ply) => {
+        players.forEach((ply) => {
           if (ply.clickCount < count) {
             targets.push(ply);
           }
@@ -446,7 +445,7 @@ export class RoomManager {
     const { room, player } = socket;
 
     if (room && room.host === socket) {
-      console.log('HOST LEFT');
+      console.log('Host left');
 
       this.destroyRoom(room);
       return;
@@ -454,7 +453,7 @@ export class RoomManager {
 
     if (!this.verifySocket(socket) || !player) return;
 
-    console.log('player left', player.name);
+    console.log('Player left', player.name);
 
     room.inactivatePlayer(player);
 
@@ -466,7 +465,7 @@ export class RoomManager {
   }
 
   onClientReconnect(socket: AppSocket, id: string, code: string) {
-    console.log('reconnect', id, code);
+    console.log('Player reconnected', id, code);
     const room = this.getRoom(code);
     if (!room) return;
 
@@ -495,21 +494,28 @@ export class RoomManager {
       return;
     }
 
-    if (player.clickCount == gameState.count) return;
+    const players = room.activePlayers;
 
     player.clickCount++;
 
-    let countDone = 0;
-    _.forEach(room.players, (ply) => {
-      if (ply.clickCount >= gameState.count) {
-        countDone++;
+    if (player.clickCount === gameState.count && players.length === 1) {
+      this.onClickGameFinished(room, []);
+      return;
+    }
+
+    if (players.length > 1) {
+      let countDone = 0;
+      _.forEach(players, (ply) => {
+        if (ply.clickCount >= gameState.count) {
+          countDone++;
+        }
+      });
+
+      if (players.length > 1 && countDone === players.length - 1) {
+        const target = players.find((ply) => ply.clickCount < gameState.count);
+
+        this.onClickGameFinished(room, [target]);
       }
-    });
-
-    if (countDone === room.players.length - 1) {
-      const target = room.players.find((ply) => ply.clickCount < gameState.count);
-
-      this.onClickGameFinished(room, [target]);
     }
   }
 
@@ -520,25 +526,30 @@ export class RoomManager {
     }
 
     const names = targets.map((p) => p.name).join(', ');
-    room.players.forEach((ply) => {
+    room.activePlayers.forEach((ply) => {
       const found = targets.find((p) => ply.id === p.id);
 
       if (found) {
         ply.addScore(1);
         this.sendPopup(ply.socket, {
           type: PopupType.GameLost,
-          drinks: 1,
+          drinks: 1 + ply.pendingDrinks,
           dice: room.dice,
           message: 'Too slow!'
         });
       } else {
         this.sendPopup(ply.socket, {
           type: PopupType.ClickGameFinished,
-          message: `You survived! ${names} ${
-            targets.length > 1 ? 'were' : 'was'
-          } too slow though...`
+          dice: room.dice,
+          message:
+            targets.length > 0
+              ? `You survived! ${names} ${targets.length > 1 ? 'were' : 'was'} too slow though...`
+              : 'You survived!',
+          drinks: ply.pendingDrinks
         });
       }
+
+      ply.resetPendingDrinks();
     });
 
     this.setGameState(room, {
@@ -595,11 +606,11 @@ export class RoomManager {
       socket.join('room_' + room.code);
       socket.emit('player_id', { id: ply.id });
 
-      console.log('player connected: ', name);
+      console.log('Player connected', name);
 
       this.syncRoom(room);
     } else {
-      console.log('player could not connected: ', name);
+      console.log('Player could not connect', name);
     }
 
     return !!ply;
@@ -637,18 +648,20 @@ export class RoomManager {
     let lastRule: Rule;
     const rules = room.matchRules(room.dice);
     _.each(rules, (r) => {
-      console.log('executing rule', r.name);
+      console.log('Executing rule', r.name);
 
       r.execute(this, room, player, players);
       lastRule = r;
     });
 
-    _.each(players, (ply) => {
-      if (ply.pendingDrinks === 0) return;
+    if (room.gameState.type !== GameStateType.Click) {
+      _.each(players, (ply) => {
+        if (ply.pendingDrinks === 0) return;
 
-      this.sendDrinks(room, ply, ply.pendingDrinks, lastRule.name);
-      ply.resetPendingDrinks();
-    });
+        this.sendDrinks(room, ply, ply.pendingDrinks, lastRule.name);
+        ply.resetPendingDrinks();
+      });
+    }
 
     this.syncRoom(room);
   }
@@ -659,7 +672,7 @@ export class RoomManager {
       return;
     }
 
-    console.log('Sending popup to ', socket.id, popup);
+    console.log('Sending popup to', socket.id, popup);
 
     socket.emit('room_popup', popup);
   }

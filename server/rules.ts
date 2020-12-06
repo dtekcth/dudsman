@@ -79,7 +79,6 @@ class AddRule extends Rule {
     if (!this.targetFunc) return;
 
     const filtered = this.targetFunc(currentPlayer, players);
-    console.log(filtered);
 
     _.each(filtered, (p) => {
       p.addPendingDrinks(this.num);

@@ -66,7 +66,7 @@ const PlayerView: React.FC<{} & ClientModels.RoomViewProps> = ({ state, dieRef1,
     rollBtn = (
       <Button
         tw="w-full h-14"
-        loading={state.rolling}
+        loading={state.rolling || !!popup}
         outline
         onClick={() => {
           if (room) {

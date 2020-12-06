@@ -80,15 +80,14 @@ const HomePage = () => {
             })}
           />
 
-          <InputMask
+          <input
             name="code"
             tw="bg-gray-200 rounded p-3 w-full focus:outline-none"
-            inputRef={register({
+            ref={register({
               required: true
             })}
-            mask="9999"
-            maskChar={null}
             placeholder="Room code"
+            maxLength={4}
           />
 
           <Button tw="w-full" loading={entering}>

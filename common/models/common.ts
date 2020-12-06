@@ -80,6 +80,8 @@ export type PopupState =
       type: PopupType.ClickGameFinished;
       delay?: number;
       message: string;
+      drinks: number;
+      dice: Dice;
     };
 
 export type PopupResult =

@@ -144,12 +144,31 @@ const Popup: React.FC<PopupProps> = ({ state: stateIn, room, onDone, delay }) =>
             <div tw="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col justify-center space-y-2 w-2/3">
               {(state.type === PopupType.Drink || state.type === PopupType.ClickGameFinished) &&
                 state.message && (
-                  <Heading size="xl" tw="text-dtek text-center">
-                    {state.message}
-                  </Heading>
+                  <>
+                    <Heading size="2xl" tw="text-dtek text-center">
+                      {state.message}
+                    </Heading>
+                    {state.type === PopupType.ClickGameFinished && state.drinks > 0 && (
+                      <Heading size="lg" tw="text-dtek text-center mt-2">
+                        However, you still drink {state.drinks} because of another rule!
+                      </Heading>
+                    )}
+                  </>
                 )}
 
-              {(state.type === PopupType.Drink || state.type === PopupType.GameLost) && (
+              {state.type === PopupType.GameLost && state.message && (
+                <Heading size="3xl" tw="text-dtek text-center">
+                  {state.message}
+                </Heading>
+              )}
+
+              {/* 
+                If popup is drinks, or game lost, or if click game 
+                is finished and you had pending drinks 
+              */}
+              {(state.type === PopupType.Drink ||
+                state.type === PopupType.GameLost ||
+                (state.type === PopupType.ClickGameFinished && state.drinks)) && (
                 <TwoDice
                   size="56px"
                   num1={state.dice[0]}
@@ -176,14 +195,11 @@ const Popup: React.FC<PopupProps> = ({ state: stateIn, room, onDone, delay }) =>
                   Drink {state.drinks}
                 </Heading>
               ) : state.type === PopupType.GameLost ? (
-                <div>
-                  <Heading size="3xl" tw="text-dtek text-center">
-                    {state.message}
-                  </Heading>
+                <>
                   <Heading size="2xl" tw="text-dtek text-center">
                     Drink {state.drinks}
                   </Heading>
-                </div>
+                </>
               ) : state.type === PopupType.Give ? (
                 <div>
                   <Heading size="xl" tw="text-dtek text-center">
