@@ -1,7 +1,6 @@
 import { Reducer } from 'redux';
-import { Dice, GameState } from '../../../common/models/common';
+import { Dice, GameState, PopupState } from '../../../common/models/common';
 import Player from '../../../server/player';
-import { PopupState } from '../../components/Popup';
 
 export type ClientRoom = {
   rollTime: number;

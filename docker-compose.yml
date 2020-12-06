@@ -1,0 +1,8 @@
+version: '2'
+services:
+  web:
+    build: .
+    command: npm start
+    container_name: dudsman
+    ports:
+      - '43625:3000'

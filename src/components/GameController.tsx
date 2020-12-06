@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { useDispatch, useStore } from 'react-redux';
+import { PopupState } from '../../common/models/common';
 import socket from '../socket';
 import { roomUpdate, playerUpdateId, socketUpdate, roomOpenPopup } from '../store/actions';
-import { PopupState } from './Popup';
 
 const GameController: React.FC = () => {
   const store = useStore();

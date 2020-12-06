@@ -6,7 +6,7 @@
     "build:server": "tsc --project tsconfig.server.json",
     "build:next": "next build",
     "build": "npm run build:next && npm run build:server",
-    "start": "NODE_ENV=production node dist/index.js",
+    "start": "NODE_ENV=production node dist/server/index.js",
     "start:dev": "ts-node --project tsconfig.server.json server/index.ts",
     "dev": "nodemon --watch server -e '.ts' --exec 'yarn start:dev'",
     "type-check": "tsc --noEmit",
