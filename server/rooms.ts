@@ -13,6 +13,7 @@ import {
   PopupType,
   POPUP_STANDARD_DELAY
 } from '../common/models/common';
+import { join } from '../common/util';
 
 const securePinGeneratePromise = (length: number) =>
   new Promise<string>((resolve) => {
@@ -645,20 +646,20 @@ export class RoomManager {
 
     const players = room.activePlayers;
 
-    let lastRule: Rule;
     const rules = room.matchRules(room.dice);
     _.each(rules, (r) => {
       console.log('Executing rule', r.name);
 
       r.execute(this, room, player, players);
-      lastRule = r;
     });
 
     if (room.gameState.type !== GameStateType.Click) {
+      const message = join(rules.map((r) => r.name));
+
       _.each(players, (ply) => {
         if (ply.pendingDrinks === 0) return;
 
-        this.sendDrinks(room, ply, ply.pendingDrinks, lastRule.name);
+        this.sendDrinks(room, ply, ply.pendingDrinks, message);
         ply.resetPendingDrinks();
       });
     }
