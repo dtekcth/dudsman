@@ -7,7 +7,8 @@ export enum PopupType {
   GameLost = 'GAME_LOST',
   Drink = 'DRINK',
   Give = 'GIVE',
-  ClickGameFinished = 'CLICK_GAME_FINISHED'
+  ClickGameFinished = 'CLICK_GAME_FINISHED',
+  NotImplemented = 'NOT_IMPLEMENTED'
 }
 
 export const avatars = ['cocktail', 'whiskey', 'keg', 'wine'] as const;
@@ -81,6 +82,12 @@ export type PopupState =
       delay?: number;
       message: string;
       drinks: number;
+      dice: Dice;
+    }
+  | {
+      type: PopupType.NotImplemented;
+      delay?: number;
+      message: string;
       dice: Dice;
     };
 

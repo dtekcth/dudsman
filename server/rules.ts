@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { Dice, GameStateType } from '../common/models/common';
+import { Dice, GameStateType, PopupType } from '../common/models/common';
 import { mod } from '../src/utils';
 import Player from './player';
 import { Room, RoomManager } from './rooms';
@@ -128,6 +128,16 @@ class ClickRule extends Rule {
 class ChallengeRule extends Rule {
   constructor(name: string, link: Link, targetFunc: TargetFunction) {
     super(name, RuleType.Challenge, link, targetFunc);
+  }
+
+  execute(manager: RoomManager, room: Room, currentPlayer: Player, players: Player[]) {
+    players.forEach((ply) => {
+      manager.sendPopup(ply.socket, {
+        type: PopupType.NotImplemented,
+        message: "Hey uh, this one ain't implemented yet fam. Figure it out on your own.",
+        dice: room.dice
+      });
+    });
   }
 }
 

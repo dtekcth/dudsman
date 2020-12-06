@@ -142,7 +142,9 @@ const Popup: React.FC<PopupProps> = ({ state: stateIn, room, onDone, delay }) =>
               ease: stateIn ? [0.34, 1.56, 0.64, 1] : 'easeInOut'
             }}>
             <div tw="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col justify-center space-y-2 w-2/3">
-              {(state.type === PopupType.Drink || state.type === PopupType.ClickGameFinished) &&
+              {(state.type === PopupType.Drink ||
+                state.type === PopupType.NotImplemented ||
+                state.type === PopupType.ClickGameFinished) &&
                 state.message && (
                   <>
                     <Heading size="2xl" tw="text-dtek text-center">
@@ -168,6 +170,7 @@ const Popup: React.FC<PopupProps> = ({ state: stateIn, room, onDone, delay }) =>
               */}
               {(state.type === PopupType.Drink ||
                 state.type === PopupType.GameLost ||
+                state.type === PopupType.NotImplemented ||
                 (state.type === PopupType.ClickGameFinished && state.drinks)) && (
                 <TwoDice
                   size="56px"

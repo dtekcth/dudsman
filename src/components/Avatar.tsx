@@ -388,6 +388,10 @@ const Avatar: React.FC<AvatarProps> = ({
                 : Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * c4) + 1;
             }
           }}
+          css={css`
+            animation: ${animations.hover()} 1.5s alternate infinite ease-in-out;
+            animation-delay: 1.25s;
+          `}
           tw="rounded-full w-6 h-6 mr-1 absolute top-0 right-0 flex justify-center items-center bg-black bg-opacity-50">
           <span tw="text-white font-bold">{scoreDebounced}</span>
         </motion.div>
