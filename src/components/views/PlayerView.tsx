@@ -24,6 +24,7 @@ import {
   PopupType
 } from '../../../common/models/common';
 import ClickArea from '../ClickArea';
+import { useDebounce } from '../../utils/hooks';
 
 const Players: React.FC<{ players: Player[]; turn: string }> = ({ players, turn }) => {
   return (
@@ -55,11 +56,19 @@ const PlayerView: React.FC<{} & ClientModels.RoomViewProps> = ({ state, dieRef1,
   const room = state.room;
   const gameState = room.data.gameState;
 
+  const clickGameDebounced = useDebounce(gameState.type === GameStateType.Click, 2500);
+
   let rollBtn: React.ReactNode;
   if (!state.rolling && gameState.type === GameStateType.Give) {
     rollBtn = (
       <div tw="h-14 text-white flex justify-center items-center font-bold text-xl">
         Waiting for player to give out drinks
+      </div>
+    );
+  } else if (!state.rolling && clickGameDebounced && gameState.type === GameStateType.Click) {
+    rollBtn = (
+      <div tw="h-14 text-white flex justify-center items-center font-bold text-xl">
+        A game is in progress....
       </div>
     );
   } else if (room.data.turn == room.playerId) {
@@ -112,7 +121,7 @@ const PlayerView: React.FC<{} & ClientModels.RoomViewProps> = ({ state, dieRef1,
         tw="relative h-full"
         animate={{
           y: menuOpen ? -50 : 0,
-          opacity: gameState.type === GameStateType.Click ? 0.2 : 1
+          opacity: clickGameDebounced && gameState.type === GameStateType.Click ? 0.2 : 1
         }}
         transition={{ duration: 0.2 }}>
         <div tw="absolute inset-x-0 top-1/2 transform -translate-y-1/2 w-full">
@@ -202,7 +211,7 @@ const PlayerView: React.FC<{} & ClientModels.RoomViewProps> = ({ state, dieRef1,
         </div>
       </div>
 
-      {gameState.type === GameStateType.Click && (
+      {clickGameDebounced && gameState.type === GameStateType.Click && (
         <div tw="absolute inset-x-8" css={{ bottom: '15%', top: '10%' }}>
           <ClickArea onClick={handleClickDot} count={gameState.count} />
         </div>

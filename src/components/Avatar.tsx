@@ -369,32 +369,34 @@ const Avatar: React.FC<AvatarProps> = ({
       </div>
 
       {scoreDebounced ? (
-        <motion.div
-          initial={{
-            scale: 0
-          }}
-          animate={{
-            scale: bubble ? 1.5 : 1
-          }}
-          transition={{
-            duration: 1,
-            ease: (x: number) => {
-              const c4 = (2 * Math.PI) / 3;
-
-              return x === 0
-                ? 0
-                : x === 1
-                ? 1
-                : Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * c4) + 1;
-            }
-          }}
+        <div
           css={css`
             animation: ${animations.hover()} 1.5s alternate infinite ease-in-out;
             animation-delay: 1.25s;
-          `}
-          tw="rounded-full w-6 h-6 mr-1 absolute top-0 right-0 flex justify-center items-center bg-black bg-opacity-50">
-          <span tw="text-white font-bold">{scoreDebounced}</span>
-        </motion.div>
+          `}>
+          <motion.div
+            initial={{
+              scale: 0
+            }}
+            animate={{
+              scale: bubble ? 1.5 : 1
+            }}
+            transition={{
+              duration: 1,
+              ease: (x: number) => {
+                const c4 = (2 * Math.PI) / 3;
+
+                return x === 0
+                  ? 0
+                  : x === 1
+                  ? 1
+                  : Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * c4) + 1;
+              }
+            }}
+            tw="rounded-full w-6 h-6 mr-1 absolute top-0 right-0 flex justify-center items-center bg-black bg-opacity-50">
+            <span tw="text-white font-bold">{scoreDebounced}</span>
+          </motion.div>
+        </div>
       ) : null}
     </div>
   );
