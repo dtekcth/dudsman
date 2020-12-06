@@ -145,6 +145,16 @@ class NewRule extends Rule {
   constructor(name: string, link: Link) {
     super(name, RuleType.New, link);
   }
+
+  execute(manager: RoomManager, room: Room, currentPlayer: Player, players: Player[]) {
+    players.forEach((ply) => {
+      manager.sendPopup(ply.socket, {
+        type: PopupType.NotImplemented,
+        message: "Hey uh, this one ain't implemented yet fam. Figure it out on your own.",
+        dice: room.dice
+      });
+    });
+  }
 }
 
 /*
