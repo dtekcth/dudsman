@@ -317,7 +317,7 @@ export class RoomManager {
   }
 
   giveDrinks(socket: AppSocket, targetIds: string[]) {
-    const { room } = socket;
+    const { player, room } = socket;
 
     if (!this.verifySocket(socket)) {
       this.sendInvalidSession(socket);
@@ -354,13 +354,15 @@ export class RoomManager {
     });
 
     targets.forEach((ply) => {
-      if (totalDrinks[ply.id] === 0) return;
+      const drinks = totalDrinks[ply.id];
+      if (drinks === 0) return;
 
-      ply.addScore(totalDrinks[ply.id]);
+      ply.addScore(drinks);
       this.sendPopup(ply.socket, {
         type: PopupType.Drink,
-        drinks: totalDrinks[ply.id],
-        dice: room.dice
+        drinks,
+        dice: room.dice,
+        message: `${player.name} gave you ${drinks} drinks`
       });
     });
 
@@ -443,6 +445,7 @@ export class RoomManager {
 
   enterRoom(code: string, name: string, socket: AppSocket) {
     const room = this.getRoom(code);
+    name = name.substr(0, 8);
 
     if (!room) {
       console.error('No room with code ' + code);
@@ -495,17 +498,19 @@ export class RoomManager {
 
     const players = room.activePlayers;
 
+    let lastRule: Rule;
     const rules = room.matchRules(room.dice);
     _.each(rules, (r) => {
       console.log('executing rule', r.name);
 
       r.execute(this, room, player, players);
+      lastRule = r;
     });
 
     _.each(players, (ply) => {
       if (ply.pendingDrinks === 0) return;
 
-      this.sendDrinks(room, ply, ply.pendingDrinks);
+      this.sendDrinks(room, ply, ply.pendingDrinks, lastRule.name);
       ply.resetPendingDrinks();
     });
 
@@ -523,7 +528,7 @@ export class RoomManager {
     socket.emit('room_popup', popup);
   }
 
-  sendDrinks(room: Room, ply: Player, amount: number) {
+  sendDrinks(room: Room, ply: Player, amount: number, message?: string) {
     if (!ply) return;
 
     if (!this.verifySocket(ply.socket)) {
@@ -536,7 +541,8 @@ export class RoomManager {
       type: PopupType.Drink,
       drinks: amount,
       dice: room.dice,
-      delay: POPUP_STANDARD_DELAY
+      delay: POPUP_STANDARD_DELAY,
+      message
     });
   }
 }

@@ -119,7 +119,7 @@ const PlayerView: React.FC<{} & ClientModels.RoomViewProps> = ({ state, dieRef1,
                     <Star
                       alternative
                       color="rgba(255, 255, 200, 0.3)"
-                      size="200"
+                      size="140"
                       css={css`
                         animation: ${animations.hostStar} 20s infinite;
                         animation-timing-function: linear;
@@ -131,7 +131,7 @@ const PlayerView: React.FC<{} & ClientModels.RoomViewProps> = ({ state, dieRef1,
                     <div css={{ transform: 'rotate(30deg)' }}>
                       <Star
                         color="rgba(255, 255, 200, 0.3)"
-                        size="180"
+                        size="140"
                         css={css`
                           animation: ${animations.hostStar} 20s infinite reverse;
                           animation-timing-function: linear;

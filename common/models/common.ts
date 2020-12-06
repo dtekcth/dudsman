@@ -60,6 +60,7 @@ export type PopupState =
       type: PopupType.Drink;
       delay?: number;
       drinks: number;
+      message?: string;
       dice: Dice;
     }
   | {
