@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { Dice, GameStateType, PopupType } from '../common/models/common';
+import { Dice, GameStateType, PopupType, POPUP_STANDARD_DELAY } from '../common/models/common';
 import { mod } from '../src/utils';
 import Player from './player';
 import { Room, RoomManager } from './rooms';
@@ -135,6 +135,7 @@ class ChallengeRule extends Rule {
       manager.sendPopup(ply.socket, {
         type: PopupType.NotImplemented,
         message: "Hey uh, this one ain't implemented yet fam. Figure it out on your own.",
+        delay: POPUP_STANDARD_DELAY,
         dice: room.dice
       });
     });
@@ -151,6 +152,7 @@ class NewRule extends Rule {
       manager.sendPopup(ply.socket, {
         type: PopupType.NotImplemented,
         message: "Hey uh, this one ain't implemented yet fam. Figure it out on your own.",
+        delay: POPUP_STANDARD_DELAY,
         dice: room.dice
       });
     });
