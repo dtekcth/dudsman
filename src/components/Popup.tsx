@@ -171,7 +171,7 @@ const Popup: React.FC<PopupProps> = ({ state: stateIn, room, onDone, delay }) =>
               {(state.type === PopupType.Drink ||
                 state.type === PopupType.GameLost ||
                 state.type === PopupType.NotImplemented ||
-                (state.type === PopupType.ClickGameFinished && state.drinks)) && (
+                (state.type === PopupType.ClickGameFinished && state.drinks > 0)) && (
                 <TwoDice
                   size="56px"
                   num1={state.dice[0]}
