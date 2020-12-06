@@ -16,20 +16,26 @@ import RoomError from '../components/RoomError';
 const HomePage = () => {
   const router = useRouter();
   const [entering, setEntering] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [error, setError] = useState<string>();
 
   const dispatch = useDispatch();
   const room = useSelector<AppState, RoomState>((state) => state.room);
 
   const handleEnterRoom = useCallback((data) => {
-    console.log(data);
     dispatch(roomReset());
+
     setEntering(true);
+    setError(undefined);
 
     socket.emit('room_enter', data, (err?: Error, success?: boolean) => {
       console.log(success);
       setEntering(false);
+
       if (success) {
         router.push('/room/' + data.code);
+      } else {
+        setError('not_found');
       }
     });
   }, []);
@@ -37,7 +43,12 @@ const HomePage = () => {
   const handleCreateRoom = useCallback(() => {
     dispatch(roomReset());
 
+    setCreating(true);
+    setError(undefined);
+
     socket.emit('room_create', {}, (err?: Error, code?: boolean) => {
+      setCreating(false);
+
       if (err) {
         console.error(err);
         return;
@@ -59,7 +70,7 @@ const HomePage = () => {
         </Heading>
 
         <form tw="mx-auto bg-white p-5 mt-1 space-y-2" onSubmit={handleSubmit(handleEnterRoom)}>
-          {room?.error && <RoomError error={room.error} />}
+          {(error ?? room?.error) && <RoomError error={error ?? room.error} />}
 
           <input
             name="name"
@@ -89,7 +100,7 @@ const HomePage = () => {
         </form>
 
         <div tw="mx-auto bg-white p-5 mt-4">
-          <Button tw="w-full" onClick={handleCreateRoom}>
+          <Button tw="w-full" onClick={handleCreateRoom} loading={creating}>
             Create room
           </Button>
         </div>

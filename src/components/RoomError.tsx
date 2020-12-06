@@ -2,7 +2,9 @@ import React from 'react';
 import 'twin.macro';
 
 const messages = {
-  kicked: 'You were kicked from the room'
+  kicked: 'You were kicked from the room',
+  destroyed: 'Host has left the room',
+  not_found: 'Room was not found'
 };
 
 const RoomError: React.FC<{ error: string }> = ({ error }) => (

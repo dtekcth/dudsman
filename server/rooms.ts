@@ -21,6 +21,7 @@ export class Room {
   turn?: string;
   dice: Dice = [];
   host: AppSocket;
+  destroyed: boolean = false;
 
   private rollTime: Date;
 
@@ -163,6 +164,10 @@ export class Room {
     return this.players.find((p) => p.id === id);
   }
 
+  destroy() {
+    this.destroyed = true;
+  }
+
   serialize() {
     return {
       code: this.code,
@@ -195,12 +200,26 @@ export class RoomManager {
       return false;
     }
 
+    if (room.destroyed) {
+      socket.emit('room_info', {
+        error: 'destroyed'
+      });
+      return;
+    }
+
     socket.emit('room_info', room.serialize());
 
     return true;
   }
 
   syncRoom(room: Room) {
+    if (room.destroyed) {
+      this.io.to('room_' + room.code).emit('room_info', {
+        error: 'destroyed'
+      });
+      return;
+    }
+
     this.io.to('room_' + room.code).emit('room_info', room.serialize());
   }
 
@@ -266,14 +285,19 @@ export class RoomManager {
       return;
     }
 
-    target.addScore(1);
-
     room.setTurn(id);
     this.syncRoom(room);
   }
 
   onClientLeave(socket: AppSocket) {
     const { room, player } = socket;
+
+    if (room && room.host === socket) {
+      console.log('HOST LEFT');
+
+      this.destroyRoom(room);
+      return;
+    }
 
     if (!this.verifySocket(socket) || !player) return;
 
@@ -360,7 +384,16 @@ export class RoomManager {
     return !!ply;
   }
 
-  destroyRoom(code: string) {}
+  destroyRoom(room: Room) {
+    if (!room) {
+      console.error('Could not destroy invalid room');
+      return;
+    }
+
+    room.destroy();
+    this.syncRoom(room);
+    _.remove(this.rooms, room);
+  }
 
   sendInvalidSession(socket: AppSocket) {
     socket.emit('room_info', {

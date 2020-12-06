@@ -1,8 +1,9 @@
 import { Reducer } from 'redux';
+import { Room } from '../../../server/rooms';
 
 export interface RoomState {
   error?: string;
-  data: any;
+  data?: Room;
   joined: boolean;
   ready: boolean;
   playerId?: string;
@@ -11,7 +12,6 @@ export interface RoomState {
 
 const roomReducer: Reducer<RoomState> = (
   state = {
-    data: {},
     joined: false,
     ready: false,
     host: false
