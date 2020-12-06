@@ -1,13 +1,24 @@
 import { Reducer } from 'redux';
-import { Room } from '../../../server/rooms';
+import Player from '../../../server/player';
+import { Dice, Room } from '../../../server/rooms';
+import { PopupState } from '../../components/Popup';
+
+export type ClientRoom = {
+  rollTime: number;
+  dice: Dice;
+  code: string;
+  players: Player[];
+  turn?: string;
+};
 
 export interface RoomState {
   error?: string;
-  data?: Room;
+  data?: ClientRoom;
   joined: boolean;
   ready: boolean;
   playerId?: string;
   host: boolean;
+  popup?: PopupState;
 }
 
 const roomReducer: Reducer<RoomState> = (
@@ -18,6 +29,8 @@ const roomReducer: Reducer<RoomState> = (
   },
   action
 ) => {
+  console.log(action);
+
   switch (action.type) {
     case 'ROOM_UPDATE':
       return {
@@ -42,6 +55,12 @@ const roomReducer: Reducer<RoomState> = (
         joined: false,
         ready: false,
         host: false
+      };
+
+    case 'ROOM_POPUP':
+      return {
+        ...state,
+        popup: action.popup
       };
 
     case 'PLAYER_ID':

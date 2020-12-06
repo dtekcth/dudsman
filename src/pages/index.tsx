@@ -29,7 +29,6 @@ const HomePage = () => {
     setError(undefined);
 
     socket.emit('room_enter', data, (err?: Error, success?: boolean) => {
-      console.log(success);
       setEntering(false);
 
       if (success) {

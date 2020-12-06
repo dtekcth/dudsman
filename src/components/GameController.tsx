@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { useDispatch, useStore } from 'react-redux';
 import socket from '../socket';
-import { roomUpdate, playerUpdateId, socketUpdate } from '../store/actions';
+import { roomUpdate, playerUpdateId, socketUpdate, roomOpenPopup } from '../store/actions';
+import { PopupState } from './Popup';
 
 const GameController: React.FC = () => {
   const store = useStore();
@@ -15,6 +16,10 @@ const GameController: React.FC = () => {
       }
 
       dispatch(roomUpdate(null, data, true, true));
+    });
+
+    socket.on('room_popup', (state: PopupState) => {
+      dispatch(roomOpenPopup(state));
     });
 
     socket.on('player_id', (data) => {
@@ -49,7 +54,6 @@ const GameController: React.FC = () => {
     });
 
     socket.on('disconnect', () => {
-      console.log('disconnect');
       dispatch(
         socketUpdate(null, {
           connected: false

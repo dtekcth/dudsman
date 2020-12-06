@@ -6,6 +6,7 @@ import uniqid from 'uniqid';
 import { AppSocket } from '.';
 import Player from './player';
 import { Rule, standardRules } from './rules';
+import { PopupState } from '../src/components/Popup';
 
 const securePinGeneratePromise = (length: number) =>
   new Promise<string>((resolve) => {
@@ -409,6 +410,30 @@ export class RoomManager {
     }
 
     room.rollDice(player);
+
+    room.players.forEach((ply) => {
+      if (ply === player) return;
+
+      const drinks = Math.floor(Math.random() * 10);
+      ply.addScore(drinks);
+      this.sendPopup(ply.socket, {
+        type: 'drink',
+        drinks,
+        dice: room.dice
+      });
+    });
+
     this.syncRoom(room);
+  }
+
+  sendPopup(socket: AppSocket, popup: PopupState) {
+    if (!this.verifySocket(socket)) {
+      this.sendInvalidSession(socket);
+      return;
+    }
+
+    console.log('Sending popup to ', socket.id, popup);
+
+    socket.emit('room_popup', popup);
   }
 }

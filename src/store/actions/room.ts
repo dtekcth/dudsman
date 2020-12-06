@@ -1,4 +1,7 @@
-export const roomUpdate = (err: Error, room: any, joined: boolean, ready: boolean) => {
+import { PopupState } from '../../components/Popup';
+import { ClientRoom } from '../reducers/room';
+
+export const roomUpdate = (err: Error, room: ClientRoom, joined: boolean, ready: boolean) => {
   return {
     type: 'ROOM_UPDATE',
     error: err,
@@ -33,5 +36,19 @@ export const socketUpdate = (err: Error, data: any) => {
     type: 'SOCKET_UPDATE',
     error: err,
     ...data
+  };
+};
+
+export const roomOpenPopup = (state: PopupState) => {
+  return {
+    type: 'ROOM_POPUP',
+    popup: state
+  };
+};
+
+export const roomClosePopup = () => {
+  return {
+    type: 'ROOM_POPUP',
+    popup: undefined
   };
 };
