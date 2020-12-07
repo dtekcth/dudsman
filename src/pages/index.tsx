@@ -78,6 +78,7 @@ const HomePage = () => {
             ref={register({
               required: true
             })}
+            maxLength={8}
           />
 
           <input

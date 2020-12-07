@@ -151,8 +151,10 @@ export class Room implements CommonModels.Room {
       return false;
     }
 
-    const n1 = Math.floor(Math.random() * 6) + 1;
-    const n2 = Math.floor(Math.random() * 6) + 1;
+    // const n1 = Math.floor(Math.random() * 6) + 1;
+    // const n2 = Math.floor(Math.random() * 6) + 1;
+    const n1 = 3,
+      n2 = 2;
 
     this.dice = [n1, n2];
     this.rollTime = new Date();

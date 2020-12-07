@@ -1,6 +1,30 @@
+import _ from 'lodash';
 import { AppSocket } from '.';
 import { CommonModels } from '../common/models';
 import { avatars, AvatarType } from '../common/models/common';
+
+/* prettier-ignore */
+const avatarMap: {
+  [avatar in AvatarType]: (RegExp | string)[];
+} = {
+  slots: [
+    /^delta/, 'slots', 'najs',
+    // Delta 18
+    'brev', 'azco', 'nora', 'gustav', 'gutsfav', 'lurre', 'algot',
+
+    // Delta 19
+    'bella', 'adler', 'greven', 'tbobbe', 'poly', 'vidar',
+
+    // Delta 20
+    'zelda', 'herman', 'aw', 'windisch', 'älgen', 'sjöcrona'
+  ],
+  whiskey: [],
+  cocktail: [],
+  keg: [],
+  wine: []
+};
+
+const avatarFilter: Set<AvatarType> = new Set(['slots']);
 
 class Player implements CommonModels.Player {
   score = 0;
@@ -16,7 +40,23 @@ class Player implements CommonModels.Player {
     this.id = id;
     this.setSocket(socket);
 
-    this.avatar = avatars[Math.floor(Math.random() * avatars.length)];
+    const checkName = name.toLowerCase();
+    _.forEach(avatarMap, (map, avatar: AvatarType) => {
+      _.forEach(avatarMap[avatar], (match) => {
+        if ((_.isRegExp(match) && checkName.match(match)) || match === checkName) {
+          this.avatar = avatar;
+
+          return false;
+        }
+      });
+      if (this.avatar) return false;
+    });
+
+    if (!this.avatar) {
+      const list = avatars.filter((a) => !avatarFilter.has(a));
+
+      this.avatar = list[Math.floor(Math.random() * list.length)];
+    }
   }
 
   setSocket(socket: AppSocket) {

@@ -11,7 +11,7 @@ export enum PopupType {
   NotImplemented = 'NOT_IMPLEMENTED'
 }
 
-export const avatars = ['cocktail', 'whiskey', 'keg', 'wine'] as const;
+export const avatars = ['cocktail', 'whiskey', 'keg', 'wine', 'slots'] as const;
 export type AvatarType = typeof avatars[number];
 
 export interface Player {
