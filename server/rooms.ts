@@ -413,6 +413,11 @@ export class RoomManager {
       return;
     }
 
+    if (room.gameState.type === GameStateType.Click) {
+      console.error('Click game is already running');
+      return;
+    }
+
     const players = room.activePlayers;
     if (players.length === 0) return;
 
