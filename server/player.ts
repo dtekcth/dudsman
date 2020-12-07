@@ -16,7 +16,10 @@ const avatarMap: {
     'bella', 'adler', 'greven', 'tbobbe', 'poly', 'vidar',
 
     // Delta 20
-    'zelda', 'herman', 'aw', 'windisch', 'älgen', 'sjöcrona'
+    'zelda', 'herman', 'aw', 'windisch', 'älgen', 'sjöcrona',
+
+    // Bois
+    /^dp/, "lowe", "lucky"
   ],
   whiskey: [],
   cocktail: [],
