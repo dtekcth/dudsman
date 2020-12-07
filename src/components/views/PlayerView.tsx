@@ -226,7 +226,7 @@ const PlayerView: React.FC<{} & ClientModels.RoomViewProps> = ({ state, dieRef1,
 
       {!popup && gameState.type === GameStateType.Give && playerId === gameState.playerId && (
         <Popup
-          delay={2.5}
+          delay={gameState.delay ?? 2.5}
           state={{
             amount: gameState.amount,
             total: 10,

@@ -661,12 +661,18 @@ export class RoomManager {
     if (room.gameState.type !== GameStateType.Click) {
       const message = join(rules.map((r) => r.name));
 
+      let didSend = false;
       _.each(players, (ply) => {
         if (ply.pendingDrinks === 0) return;
 
         this.sendDrinks(room, ply, ply.pendingDrinks, message);
         ply.resetPendingDrinks();
+        didSend = true;
       });
+
+      if (didSend && room.gameState.type === GameStateType.Give) {
+        room.gameState.delay = 0;
+      }
     }
 
     this.syncRoom(room);

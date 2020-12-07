@@ -39,6 +39,7 @@ export type GameState =
       amount: number[];
       dice: CommonModels.Dice;
       total: number;
+      delay?: number;
     }
   | {
       type: GameStateType.Click;
