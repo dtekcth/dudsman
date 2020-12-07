@@ -8,15 +8,16 @@ export type TwoDiceProps = {
   num2: number;
   ref1?: React.RefObject<DieElement>;
   ref2?: React.RefObject<DieElement>;
+  width?: string;
 } & Omit<DieProps, 'number'>;
 
-const TwoDice: React.FC<TwoDiceProps> = ({ className, num1, num2, ref1, ref2, ...rest }) => (
+const TwoDice: React.FC<TwoDiceProps> = ({ className, num1, num2, ref1, ref2, width, ...rest }) => (
   <div {...{ className }} tw="flex justify-center -mx-2">
-    <div tw="w-1/3 p-2">
+    <div tw="p-2" css={width && { width }}>
       <Die tw="mx-auto" ref={ref1} number={num1} {...rest} />
     </div>
 
-    <div tw="w-1/3 p-2">
+    <div tw="p-2" css={width && { width }}>
       <Die tw="mx-auto" ref={ref2} right number={num2} delay={0.25} {...rest} />
     </div>
   </div>

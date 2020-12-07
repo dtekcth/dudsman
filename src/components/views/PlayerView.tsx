@@ -167,7 +167,14 @@ const PlayerView: React.FC<{} & ClientModels.RoomViewProps> = ({ state, dieRef1,
               </>
             )}
 
-            <TwoDice tw="mt-4" ref1={dieRef1} ref2={dieRef2} num1={state.num1} num2={state.num2} />
+            <TwoDice
+              tw="mt-4"
+              ref1={dieRef1}
+              ref2={dieRef2}
+              num1={state.num1}
+              num2={state.num2}
+              width="33.3333%"
+            />
 
             <div tw="mt-4 sm:mt-5 mb-2 sm:mb-5">{rollBtn}</div>
           </div>
