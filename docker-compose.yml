@@ -1,8 +1,19 @@
-version: '2'
+version: '3.7'
 services:
   web:
     build: .
     command: npm start
     container_name: dudsman
-    ports:
-      - '43625:3000'
+    restart: unless-stopped
+    expose:
+      - 3000
+    networks:
+      - ingress
+    labels:
+      traefik.docker.network: dudsman.tratt6.party-ingress
+      traefik.http.routers.dudsman_tratt6_party.rule: Host(`dudsman.tratt6.party`)
+      traefik.http.routers.dudsman_tratt6_party.middlewares: https@file
+
+networks:
+  ingress:
+    name: dudsman.tratt6.party-ingress
